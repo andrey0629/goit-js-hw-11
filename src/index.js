@@ -1,11 +1,7 @@
-// https://
-// Your API key: 39228516 - 4e11e74abb6ab519ed74b0ef3
-
-// import SlimSelect from 'slim-select';
-// import { Notify } from 'notiflix/build/notiflix-notify-aio';
-// import { Loading } from 'notiflix/build/notiflix-loading-aio';
-// // import 'slim-select/dist/slimselect.css';
-// import { fetchBreeds, fetchCatByBreed } from './cat-api';
+import SlimSelect from 'slim-select';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { Loading } from 'notiflix/build/notiflix-loading-aio';
+import 'slim-select/dist/slimselect.css';
 
 import axios from 'axios';
 const instance = axios.create({

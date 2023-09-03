@@ -1,4 +1,4 @@
-// https://pixabay.com/api/
+// https://
 // Your API key: 39228516 - 4e11e74abb6ab519ed74b0ef3
 
 // import SlimSelect from 'slim-select';
@@ -7,14 +7,15 @@
 // // import 'slim-select/dist/slimselect.css';
 // import { fetchBreeds, fetchCatByBreed } from './cat-api';
 
-// import axios from 'axios';
-// const instance = axios.create({
-//   baseURL: 'https://api.thecatapi.com/v1/',
-//   headers: {
-//     'x-api-key':
-//       'live_5gcBxYGBeGtVnTe4tRQVLU3tQgzVUm9OvGjso2ptqnap9avv66fdGiowLO59glmR',
-//   },
-// });
+import axios from 'axios';
+const instance = axios.create({
+  baseURL: 'https://pixabay.com/api/',
+  headers: {
+    //   'x-api-key':
+    'key':
+          '39228516 - 4e11e74abb6ab519ed74b0ef3',
+  },
+});
 
 
 function fetchBreeds() {

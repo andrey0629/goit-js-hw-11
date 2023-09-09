@@ -1,18 +1,18 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
-// import OnlyScroll from 'only-scrollbar';
 import { fetchImg } from './api.js';
 import { renderImgCard } from './renderCard.js';
+
 export const cardBlock = document.querySelector('.gallery');
 const searchFormEl = document.querySelector('#search-form');
 const typeInputEl = document.querySelector('input[name="searchQuery"]');
-// const scroll = new OnlyScroll(window);
-export let page = 0;
-export const perPage = 40;
 const target = document.querySelector('.observer');
 let typeValue = '';
 export let observer = null;
+export let page = 0;
+export const perPage = 40;
+let totalHits = 0;
 
 function createImg(event) {
   event.preventDefault();
@@ -22,7 +22,8 @@ function createImg(event) {
     return;
   }
   cardBlock.innerHTML = '';
-  page = 1;
+  page = 0;
+  totalHits = 0; // Сбрасываем общее количество найденных изображений
   fetchData();
   if (observer) {
     observer.disconnect();
@@ -31,55 +32,36 @@ function createImg(event) {
 
 async function fetchData() {
   try {
+    page += 1;
     const typeValue = typeInputEl.value;
-    const response = await fetchImg(typeValue);
-    observerFunc(response);
+    const response = await fetchImg(typeValue, page);
+    if (response.data.totalHits === 0) {
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+      return;
+    }
+
+    if (page === 1) {
+      totalHits = response.data.totalHits; // Обновляем общее количество найденных изображений
+      Notiflix.Notify.info(`Hooray! We found ${totalHits} images.`);
+    }
+
     renderImgCard(response);
+
+    // Если загружено меньше, чем общее количество изображений, продолжаем загрузку
+    if (perPage * page < totalHits) {
+      fetchData();
+    }
   } catch (error) {
     console.error(error);
     Notiflix.Notify.failure(
-      'Oops! Something went wrong! Try reloading the page!'
+      'Oops! Something went wrong! Try reloading the page.'
     );
   }
 }
 
 searchFormEl.addEventListener('submit', createImg);
-
-// function observerFunc() {
-//   const options = {
-//     root: null,
-//     rootMargin: '500px',
-//     threshold: 1,
-//   };
-//   const callback = function (entries) {
-//     entries.forEach(entry => {
-//       if (!cardBlock.firstElementChild) {
-//         return;
-//       } else if (entry.isIntersecting) {
-//         page += 1;
-//         fetchImg(typeValue)
-//           .then(response => {
-//             if (perPage * page > response.data.totalHits) {
-//               observer.disconnect();
-//               Notiflix.Notify.warning(
-//                 "We're sorry, but you've reached the end of search results."
-//               );
-//               return;
-//             }
-//             renderImgCard(response);
-//           })
-//           .catch(error => {
-//             Notiflix.Notify.failure(
-//               'Oops! Something went wrong! Try reloading the page!'
-//             );
-//             console.log(error);
-//           });
-//       }
-//     });
-//   };
-//   observer = new IntersectionObserver(callback, options);
-//   observer.observe(target);
-// }
 
 async function observerFunc() {
   const options = {
@@ -92,26 +74,12 @@ async function observerFunc() {
       if (!cardBlock.firstElementChild) {
         return;
       } else if (entry.isIntersecting) {
-        page += 1;
-        try {
-          const response = await fetchImg(typeValue);
-          if (perPage * page > response.data.totalHits) {
-            observer.disconnect();
-            Notiflix.Notify.warning(
-              "We're sorry, but you've reached the end of search results."
-            );
-            return;
-          }
-          renderImgCard(response);
-        } catch (error) {
-          Notiflix.Notify.failure(
-            'Oops! Something went wrong! Try reloading the page!'
-          );
-          console.log(error);
-        }
+        fetchData();
       }
     }
   };
   observer = new IntersectionObserver(callback, options);
   observer.observe(target);
 }
+
+observerFunc();

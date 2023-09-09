@@ -1,10 +1,27 @@
 import { cardBlock } from './index.js';
+import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
 let gallery;
+
 export function renderImgCard(response) {
-  if (!response) {
+  if (
+    !response ||
+    !response.data ||
+    !response.data.hits ||
+    !Array.isArray(response.data.hits)
+  ) {
     return;
   }
-  const markupImg = response.data.hits
+
+  const hits = response.data.hits;
+
+  if (hits.length === 0) {
+    return;
+  }
+
+  const markupImg = hits
     .map(
       ({
         largeImageURL,
@@ -41,12 +58,15 @@ export function renderImgCard(response) {
       }
     )
     .join('');
+
   cardBlock.insertAdjacentHTML('beforeend', markupImg);
+
   if (!gallery) {
     gallery = new SimpleLightbox('.gallery a', {
       captions: true,
       captionsData: 'alt',
     });
   }
+
   gallery.refresh();
 }

@@ -13,6 +13,7 @@ export let observer = null;
 export let page = 0;
 export const perPage = 40;
 let totalHits = 0;
+let isLoading = false;
 
 function createImg(event) {
   event.preventDefault();
@@ -23,7 +24,8 @@ function createImg(event) {
   }
   cardBlock.innerHTML = '';
   page = 0;
-  totalHits = 0; // Сбрасываем общее количество найденных изображений
+  totalHits = 0;
+  isLoading = false;
   fetchData();
   if (observer) {
     observer.disconnect();
@@ -32,6 +34,8 @@ function createImg(event) {
 
 async function fetchData() {
   try {
+    if (isLoading) return;
+    isLoading = true;
     page += 1;
     const typeValue = typeInputEl.value;
     const response = await fetchImg(typeValue, page);
@@ -39,25 +43,26 @@ async function fetchData() {
       Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
+      isLoading = false;
       return;
     }
 
     if (page === 1) {
-      totalHits = response.data.totalHits; // Обновляем общее количество найденных изображений
+      totalHits = response.data.totalHits;
       Notiflix.Notify.info(`Hooray! We found ${totalHits} images.`);
     }
-
     renderImgCard(response);
 
-    // Если загружено меньше, чем общее количество изображений, продолжаем загрузку
-    if (perPage * page < totalHits) {
-      fetchData();
+    if (totalHits > perPage * page) {
+      observerFunc();
     }
+    isLoading = false;
   } catch (error) {
     console.error(error);
     Notiflix.Notify.failure(
       'Oops! Something went wrong! Try reloading the page.'
     );
+    isLoading = false;
   }
 }
 
@@ -69,15 +74,17 @@ async function observerFunc() {
     rootMargin: '500px',
     threshold: 1,
   };
-  const callback = async function (entries) {
-    for (const entry of entries) {
+
+  const callback = function (entries) {
+    entries.forEach(entry => {
       if (!cardBlock.firstElementChild) {
         return;
       } else if (entry.isIntersecting) {
         fetchData();
       }
-    }
+    });
   };
+
   observer = new IntersectionObserver(callback, options);
   observer.observe(target);
 }

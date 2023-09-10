@@ -14,6 +14,7 @@ export let page = 0;
 export const perPage = 40;
 let totalHits = 0;
 let isLoading = false;
+let hasReachedEnd = false; // Новая переменная для отслеживания конца результатов
 
 function createImg(event) {
   event.preventDefault();
@@ -26,6 +27,7 @@ function createImg(event) {
   page = 0;
   totalHits = 0;
   isLoading = false;
+  hasReachedEnd = false; // Сброс флага при новом поиске
   fetchData();
   if (observer) {
     observer.disconnect();
@@ -34,7 +36,7 @@ function createImg(event) {
 
 async function fetchData() {
   try {
-    if (isLoading) return;
+    if (isLoading || hasReachedEnd) return; // Прекращаем, если уже загружаем или достигли конца
     isLoading = true;
     page += 1;
     const typeValue = typeInputEl.value;
@@ -55,7 +57,13 @@ async function fetchData() {
 
     if (totalHits > perPage * page) {
       observerFunc();
+    } else {
+      hasReachedEnd = true; // Устанавливаем флаг в true, если достигли конца
+      Notiflix.Notify.warning(
+        "We're sorry, but you've reached the end of search results."
+      );
     }
+
     isLoading = false;
   } catch (error) {
     console.error(error);
